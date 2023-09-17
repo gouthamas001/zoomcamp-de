@@ -46,5 +46,40 @@ docker network create pg-network
         --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
 
 
+docker build -t tlc_taxi_ingestion:v01 .
+
+docker run -it tlc_taxi_ingestion:v01 \
+        --user_name=root \
+        --password=root \
+        --host_name=localhost \
+        --port=5432 \
+        --db_name=ny_taxi \
+        --table_name=yellow_taxi_trips \
+        --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+
+---- Run the containers in network and map hostname to postgres network name
+docker run -it \
+        --network=pg-network \
+        tlc_taxi_ingestion:v01 \
+        --user_name=root \
+        --password=root \
+        --host_name=localhost \
+        --port=5432 \
+        --db_name=ny_taxi \
+        --table_name=yellow_taxi_trips \
+        --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+
+
+Create Docker Compose file
+
+docker-compose up
+docker-compose down
+
+
+
+
+
 
 
