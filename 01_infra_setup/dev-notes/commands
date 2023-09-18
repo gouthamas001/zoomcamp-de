@@ -1,0 +1,85 @@
+pgcli
+
+-- to spinup postgres docker
+
+docker run -it -e POSTGRES_USER="root" -e POSTGRES_PASSWORD="root"  -e POSTGRES_DB="ny_taxi"  -v ${pwd}/ny_taxi_postgres_data=/var/lib/postgresql/data -p 5432:5432 postgres:13
+
+
+-- to login to postgre
+
+1. install pgcli ( pip install pgcli)
+2. Enter command
+    * pgcli -h localhost -p 5432 -u root -d ny_taxi
+
+
+-- create docker network
+-- To spin up postgre and pgadmin in different containers. If we put both containers in same network, they can talk to each other
+docker network create pg-network
+1. For postgres container
+    docker run -it \
+    -e POSTGRES_USER="root" \
+    -e POSTGRES_PASSWORD="root" \
+    -e POSTGRES_DB="ny_taxi"  \
+    -v ${pwd}/ny_taxi_postgres_data=/var/lib/postgresql/data \
+    -p 5432:5432 \
+    --network=pg-network \
+    --name pg-db \
+    postgres:13
+2. For pgadmin container
+    docker run -it \
+    -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+    -e PGADMIN_DEFAULT_PASSWORD="root" \
+    -p 8080:80 \
+    --network=pg-network \
+    --name pgadmin \
+    dpage/pgadmin4   
+
+--https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet
+-- 
+    python3 ingest_data.py \
+        --user_name=root \
+        --password=root \
+        --host_name=localhost \
+        --port=5432 \
+        --db_name=ny_taxi \
+        --table_name=yellow_taxi_trips \
+        --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+
+docker build -t tlc_taxi_ingestion:v01 .
+
+docker run -it tlc_taxi_ingestion:v01 \
+        --user_name=root \
+        --password=root \
+        --host_name=localhost \
+        --port=5432 \
+        --db_name=ny_taxi \
+        --table_name=yellow_taxi_trips \
+        --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+
+---- Run the containers in network and map hostname to postgres network name
+docker run -it \
+        --network=pg-network \
+        tlc_taxi_ingestion:v01 \
+        --user_name=root \
+        --password=root \
+        --host_name=localhost \
+        --port=5432 \
+        --db_name=ny_taxi \
+        --table_name=yellow_taxi_trips \
+        --url="https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
+
+
+
+Create Docker Compose file
+
+docker-compose up
+docker-compose down
+
+
+
+
+
+
+
