@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 import os
 import pyarrow.parquet as pq
@@ -21,6 +22,13 @@ def trigger_ingestion(params):
     table_name = params.table_name
     url = params.url
     input_file = "sample_2023.parquet"
+
+    # input check
+
+    if url.endswith(".parquet"):
+        pass
+    else:
+        sys.exit()
 
     # download the parquet file here
     os.system(f"wget {url} -O {input_file}")
