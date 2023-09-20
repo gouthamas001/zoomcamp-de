@@ -8,6 +8,7 @@ from prefect import flow, task
 from prefect.tasks import task_input_hash
 from datetime import timedelta
 import pyarrow as pa
+from prefect_sqlalchemy import SqlAlchemyConnector
 
 
 @task(
@@ -59,17 +60,21 @@ def trigger_ingestion(params, data):
     # df.to_sql(name="yello_taxi_data", con=engine, if_exists='replace')
 
     # Read params from argparser object
-    user = params["user_name"]
-    password = params["password"]
-    host = params["host_name"]
-    port = params["port"]
-    db = params["db_name"]
+    # user = params["user_name"]
+    # password = params["password"]
+    # host = params["host_name"]
+    # port = params["port"]
+    # db = params["db_name"]
     table_name = params["table_name"]
-    url = params["url"]
+    # url = params["url"]
 
     # Creating db connection using sqlalchemy
-    engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{db}")
-    data.to_sql(name=table_name, con=engine, if_exists="append")
+    # engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{db}")
+    connection_block = SqlAlchemyConnector.load("postgre-connector")
+
+    with connection_block.get_connection(begin=False) as engine:
+        data.head(n=0).to_sql(name=table_name, con=engine, if_exists="replace")
+        data.to_sql(name=table_name, con=engine, if_exists="append")
 
     # try:
     #     counter = 1
